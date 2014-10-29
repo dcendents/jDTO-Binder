@@ -17,6 +17,7 @@ package org.jdto.impl;
 
 import java.io.Serializable;
 import java.util.*;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jdto.*;
@@ -195,7 +196,7 @@ class SimpleBinderDelegate implements Serializable {
             case SINGLE:
                 ret = binderBean.bindFromBusinessObject(fieldMetadata.getCascadeTargetClass(), values);
                 break;
-            case COLLECTION:
+            case LIST:
                 //pretty dangerous cast I say :)
                 listValues = new List[values.length];
 
@@ -204,6 +205,16 @@ class SimpleBinderDelegate implements Serializable {
                 }
 
                 ret = binderBean.bindFromBusinessObjectList(fieldMetadata.getCascadeTargetClass(), listValues);
+                break;
+            case SET:
+                //pretty dangerous cast I say :)
+                listValues = new List[values.length];
+
+                for (int i = 0; i < values.length; i++) {
+                    listValues[i] = (List) convertValueToList(values[i]);
+                }
+
+                ret = new HashSet(binderBean.bindFromBusinessObjectList(fieldMetadata.getCascadeTargetClass(), listValues));
                 break;
             case ARRAY:
                 //pretty dangerous cast I say :)

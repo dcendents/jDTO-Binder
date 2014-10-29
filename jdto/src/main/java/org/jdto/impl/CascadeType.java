@@ -33,5 +33,6 @@ public enum CascadeType {
      * The only collection supported at the moment will be the list but for
      * futures sake.
      */
-    COLLECTION
+    LIST,
+    SET
 }

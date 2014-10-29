@@ -23,6 +23,8 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
 import org.jdto.DTOBindingContext;
 import org.jdto.mergers.FirstObjectPropertyValueMerger;
 import org.jdto.mergers.IdentityPropertyValueMerger;
@@ -333,7 +335,9 @@ abstract class AbstractBeanInspector implements Serializable {
         target.setCascadePresent(true);
 
         if (List.class.isAssignableFrom(accessorType)) {
-            cascadeType = CascadeType.COLLECTION;
+            cascadeType = CascadeType.LIST;
+        } else if (Set.class.isAssignableFrom(accessorType)) {
+            cascadeType = CascadeType.SET;
         } else if (accessorType.isArray()) {
             cascadeType = CascadeType.ARRAY;
         } else {
@@ -369,7 +373,8 @@ abstract class AbstractBeanInspector implements Serializable {
                 return accessorType;
             case ARRAY:
                 return accessorType.getComponentType();
-            case COLLECTION:
+            case LIST:
+            case SET:
                 return BeanPropertyUtils.getGenericTypeParameter(accesorGenericType);
         }
         return null;
