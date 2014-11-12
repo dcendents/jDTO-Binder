@@ -90,7 +90,7 @@ class SimpleBinderDelegate implements Serializable {
         if (metadata.isImmutableBean()) {
             List<FieldMetadata> args = metadata.getConstructorArgs();
             for (FieldMetadata fieldMetadata : args) {
-                Object targetValue = buildTargetValue(metadata, fieldMetadata, ret, sourceBeans, businessObjects);
+                Object targetValue = buildTargetValue(dtoClass, null, metadata, fieldMetadata, ret, sourceBeans, businessObjects);
 
                 //if the source and target types are not compatible, then apply the compatibility logic
                 targetValue = ValueConversionHelper.applyCompatibilityLogic(fieldMetadata.getTargetType(), targetValue);
@@ -105,7 +105,7 @@ class SimpleBinderDelegate implements Serializable {
             for (String targetProperty : propertyMappings.keySet()) {
                 //get the configuration for the DTO objects.
                 FieldMetadata fieldMetadata = propertyMappings.get(targetProperty);
-                Object targetValue = buildTargetValue(metadata, fieldMetadata, ret, sourceBeans, businessObjects);
+                Object targetValue = buildTargetValue(dtoClass, targetProperty, metadata, fieldMetadata, ret, sourceBeans, businessObjects);
                 modifier.writePropertyValue(targetProperty, targetValue, ret);
             }
         }
@@ -115,7 +115,7 @@ class SimpleBinderDelegate implements Serializable {
         return ret;
     }
 
-    private <T> Object buildTargetValue(BeanMetadata metadata, FieldMetadata fieldMetadata, T ret, HashMap<String, Object> sourceBeans, Object... businessObjects) {
+    private <T> Object buildTargetValue(Class<?> dtoClass, String targetProperty, BeanMetadata metadata, FieldMetadata fieldMetadata, T ret, HashMap<String, Object> sourceBeans, Object... businessObjects) {
         //create a buffer for the source values.
         List<Object> sourceValues = new ArrayList<Object>();
 
@@ -131,7 +131,7 @@ class SimpleBinderDelegate implements Serializable {
             
             populateSourceBeans(sourceBeans, metadata, fieldMetadata, businessObjects);
 
-            Object finalValue = applyMergeToSingleField(sourceBeans, sourceProperty, fieldMetadata, sourcePropertyIndex);
+            Object finalValue = applyMergeToSingleField(sourceBeans, sourceProperty, fieldMetadata, sourcePropertyIndex, dtoClass, targetProperty, metadata);
             sourceValues.add(finalValue);
             sourcePropertyIndex++;
         }
@@ -304,7 +304,7 @@ class SimpleBinderDelegate implements Serializable {
             Object value = modifier.readPropertyValue(source, dto);
             
             //try to restore the value
-            value = applyRestoreToSingleField(value, fieldMetadata, 0);
+            value = applyRestoreToSingleField(value, fieldMetadata, 0, entityClass, target, metadata);
             
             //and set
             modifier.writePropertyValue(target, value, ret);
@@ -314,7 +314,7 @@ class SimpleBinderDelegate implements Serializable {
         return ret;
     }
 
-    private Object applyMergeToSingleField(HashMap<String, Object> sourceBeans, String sourceProperty, FieldMetadata fieldMetadata, int fieldIndex) {
+    private Object applyMergeToSingleField(HashMap<String, Object> sourceBeans, String sourceProperty, FieldMetadata fieldMetadata, int fieldIndex, Class<?> dtoClass, String targetProperty, BeanMetadata beanMetadata) {
 
         //read the source value
         Object sourceValue = readSourceValue(sourceBeans, sourceProperty, fieldMetadata, fieldIndex);
@@ -324,19 +324,29 @@ class SimpleBinderDelegate implements Serializable {
         String[] mergerExtraParam = fieldMetadata.getSourceMergersParams()[fieldIndex];
 
         SinglePropertyValueMerger merger = (SinglePropertyValueMerger) mergerManager.getPropertyValueMerger(mergerClass); //todo get the merger from the context
-        return merger.mergeObjects(sourceValue, mergerExtraParam);
+        if( merger instanceof AdvancedSinglePropertyValueMerger ) {
+        	return ((AdvancedSinglePropertyValueMerger) merger).mergeObjects(sourceValue, mergerExtraParam, dtoClass, targetProperty, beanMetadata, fieldMetadata);
+        }
+        else {
+        	return merger.mergeObjects(sourceValue, mergerExtraParam);
+        }
     }
     
     
-    private Object applyRestoreToSingleField(Object originalValue, FieldMetadata fieldMetadata, int sourceValueIndex) {
+    private Object applyRestoreToSingleField(Object originalValue, FieldMetadata fieldMetadata, int sourceValueIndex, Class<?> dtoClass, String targetProperty, BeanMetadata beanMetadata) {
         Class mergerClass = fieldMetadata.getSourceMergers()[sourceValueIndex];
         String[] mergerExtraParam = fieldMetadata.getSourceMergersParams()[sourceValueIndex];
         
         SinglePropertyValueMerger merger = (SinglePropertyValueMerger) mergerManager.getPropertyValueMerger(mergerClass); 
         
         if (merger.isRestoreSupported(mergerExtraParam)) {
-            return merger.restoreObject(originalValue, mergerExtraParam);
-        }
+            if( merger instanceof AdvancedSinglePropertyValueMerger ) {
+            	return ((AdvancedSinglePropertyValueMerger) merger).restoreObject(originalValue, mergerExtraParam, dtoClass, targetProperty, beanMetadata, fieldMetadata);
+            }
+            else {
+            	return merger.restoreObject(originalValue, mergerExtraParam);
+            }
+       }
         
         return originalValue;
     }
