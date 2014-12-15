@@ -159,4 +159,16 @@
 
 	<!-- deployment -->
 	<!-- <distributionManagement> <repository> <id>jdto-deployment</id> <url>ftp://ftp.jdto.org/</url> </repository> </distributionManagement> -->
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Releases</name>
+			<url>http://10.9.1.231:8080/nexus-2.3.0-04/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Snapshots</name>
+			<url>http://10.9.1.231:8080/nexus-2.3.0-04/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>
