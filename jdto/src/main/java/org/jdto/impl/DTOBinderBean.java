@@ -15,13 +15,19 @@
  */
 package org.jdto.impl;
 
+import java.text.MessageFormat;
 import java.util.Collection;
+
 import org.jdto.BeanModifier;
 import org.jdto.DTOBinder;
+import org.jdto.TypeResolver;
+
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.jdto.PropertyValueMerger;
 import org.jdto.PropertyValueMergerInstanceManager;
@@ -41,6 +47,8 @@ public class DTOBinderBean implements DTOBinder {
     private HashMap<Class, BeanMetadata> metadata;
     static final Logger logger = LoggerFactory.getLogger(DTOBinderBean.class);
     ThreadLocal<HashMap> bindingContext = new ThreadLocal<HashMap>();
+	private TypeResolver typeResolver;
+
     /**
      * This delegate will hold the real implementation of the binding lifecycle
      * for simple instances, hiding the complexity of other types of bindings
@@ -86,13 +94,30 @@ public class DTOBinderBean implements DTOBinder {
 
     @Override
     public <T> T bindFromBusinessObject(Class<T> dtoClass, Object... businessObjects) {
+    	Class<T> resolvedDtoClass = dtoClass;
+    	
+		if (typeResolver != null && dtoClass != null && businessObjects != null) {
+			for (Object businessObject : businessObjects) {
+				if (businessObject == null) {
+					continue;
+				}
+				Class<T> concreteType = (Class<T>) typeResolver.resolveType(dtoClass, businessObject.getClass());
+				if (concreteType != null) {
+					resolvedDtoClass = concreteType;
+					break;
+				}
+				if ((dtoClass.getModifiers() & Modifier.ABSTRACT) != 0) {
+					logger.warn(MessageFormat.format("No instanciable type found for source type {0}.", businessObject.getClass()));
+				}
+			}
+		}
 
         boolean shouldReleaseThreadLocal = initBindingContextIfNecessary();
         try {
             if (businessObjects[0] == null) {
                 return null;
             }
-            return implementationDelegate.bindFromBusinessObject(metadata, dtoClass, businessObjects);
+            return implementationDelegate.bindFromBusinessObject(metadata, resolvedDtoClass, businessObjects);
         } finally {
             releaseBindingContext(shouldReleaseThreadLocal);
         }
@@ -216,7 +241,21 @@ public class DTOBinderBean implements DTOBinder {
         this.implementationDelegate.setMergerManager(manager);
     }
     
-    //get the size of the first not-null list
+    /**
+	 * @return the typeResolver
+	 */
+	public TypeResolver getTypeResolver() {
+		return typeResolver;
+	}
+
+	/**
+	 * @param typeResolver the typeResolver to set
+	 */
+	public void setTypeResolver(TypeResolver typeResolver) {
+		this.typeResolver = typeResolver;
+	}
+
+	//get the size of the first not-null list
     private int getSourceListsSize(List[] businessObjectsLists) {
         
         for (List list : businessObjectsLists) {

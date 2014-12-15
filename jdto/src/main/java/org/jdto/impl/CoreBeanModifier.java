@@ -109,6 +109,9 @@ public class CoreBeanModifier extends BaseBeanModifier {
             return actualInstance;
         } catch (Exception ex) {
             logger.error("Got unmanaged exception while trying to read property path " + propertyPath, ex);
+            if( !Config.isIgnoreRuntimeException() ) {
+            	throw new RuntimeException(ex);
+            }
             return null;
         }
     }

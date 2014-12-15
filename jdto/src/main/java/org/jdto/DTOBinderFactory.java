@@ -60,7 +60,23 @@ public abstract class DTOBinderFactory {
         
         return bean;
     }
-    
+
+    /**
+     * Create a new instance of a DTO binder which will read the binding configuration
+     * out of the given XML file passed as a parameter.
+     * @param xmlFile
+     * @return a new binder instance configured with the default bean modifier 
+     * and metadata read from an XML configruation file.
+     * @throws IllegalArgumentException if the classpath resource is not found.
+     */
+    public static DTOBinder buildBinder(InputStream xmlFile, TypeResolver typeResolver) {
+        DTOBinderBean bean = new DTOBinderBean(xmlFile, true);
+        injectDependencies(bean);
+        bean.setTypeResolver(typeResolver);
+        
+        return bean;
+    }
+
     /**
      * Create a new instance of a DTO binder which will read the binding configuration
      * out of the given XML file wich should be present in the classpath.

@@ -25,7 +25,6 @@
         <version>1.4-DRDC-1.2-SNAPSHOT</version>
     </parent>
     
-    <groupId>org.jdto</groupId>
     <artifactId>jdto-cdi</artifactId>
     <packaging>jar</packaging>
 
@@ -69,6 +68,11 @@
             <groupId>org.jdto</groupId>
             <artifactId>jdto</artifactId>
         </dependency>
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2.1</version>
+		</dependency>
         <!-- for the integration with cdi -->
         <dependency>
             <groupId>javax.inject</groupId>
@@ -76,6 +80,12 @@
             <version>${cdi.version}</version>
             <scope>provided</scope>
         </dependency>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>6.0</version>
+			<scope>provided</scope>
+		</dependency>
     </dependencies>
 
     <properties>
