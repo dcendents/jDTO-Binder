@@ -17,9 +17,11 @@
 package org.jdto.impl;
 
 import org.jdto.BeanModifier;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +91,9 @@ public class CoreBeanModifier extends BaseBeanModifier {
 
                 if (getter == null) {
                     logger.warn("no getter method found for property " + property + " on class " + actualInstance.getClass().getName());
+                    if( !Config.isIgnoreRuntimeException() ) {
+                    	throw new RuntimeException("no getter method found for property " + property + " on class " + actualInstance.getClass().getName());
+                    }
                     return null;
                 }
 

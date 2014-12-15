@@ -18,6 +18,7 @@ package org.jdto.impl;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
+
 import org.apache.commons.lang.StringUtils;
 import org.jdto.util.MethodUtils;
 import org.slf4j.Logger;
@@ -156,6 +157,9 @@ public class BeanClassUtils {
             return Class.forName(type);
         } catch (Exception ex) {
             logger.error("Error while trying to read the dto class", ex);
+            if( !Config.isIgnoreRuntimeException() ) {
+            	throw new RuntimeException(ex);
+            }
             return null;
         }
     }

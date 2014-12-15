@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jdto.DTOBindingContext;
+import org.jdto.mergers.DefaultValueKeeperMerger;
 import org.jdto.mergers.FirstObjectPropertyValueMerger;
 import org.jdto.mergers.IdentityPropertyValueMerger;
 import org.slf4j.Logger;
@@ -304,7 +305,7 @@ abstract class AbstractBeanInspector implements Serializable {
      * @return 
      */
     static Class defaultSinglePropertyMerger() {
-        return IdentityPropertyValueMerger.class;
+        return DefaultValueKeeperMerger.class;
     }
 
     /**
